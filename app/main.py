@@ -39,9 +39,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include routers
+# Include routers with standard /api prefix
 app.include_router(meetings.router, prefix=settings.API_V1_STR)
 app.include_router(participants.router, prefix=settings.API_V1_STR)
+
+# Safe fallback: also resolve without /api prefix (e.g. /meetings/upcoming)
+app.include_router(meetings.router)
+app.include_router(participants.router)
+
 app.include_router(signaling.router)
 
 
