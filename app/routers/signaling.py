@@ -187,12 +187,27 @@ async def websocket_signaling_endpoint(
                     "type": "mute-all",
                     "sender": client_id
                 })
+            elif msg_type == "unmute-all":
+                # Host unmuted all participants
+                if meeting_id in manager.rooms:
+                    for cid in manager.rooms[meeting_id]:
+                        if cid != client_id:
+                            manager.rooms[meeting_id][cid]["audio"] = True
+                await manager.broadcast_to_others(meeting_id, client_id, {
+                    "type": "unmute-all",
+                    "sender": client_id
+                })
             elif msg_type == "remove-peer":
                 # Host removed specific peer
                 if target:
                     await manager.send_to_client(meeting_id, target, {
                         "type": "removed-by-host",
                         "message": "You were removed from the meeting by the host."
+                    })
+                    manager.disconnect(meeting_id, target)
+                    await manager.broadcast_to_room(meeting_id, {
+                        "type": "peer-left",
+                        "clientId": target
                     })
             elif msg_type == "meeting-ended":
                 # Host ended the meeting for everyone
