@@ -179,6 +179,10 @@ async def websocket_signaling_endpoint(
                 await manager.broadcast_to_others(meeting_id, client_id, data)
             elif msg_type == "mute-all":
                 # Host muted all participants
+                if meeting_id in manager.rooms:
+                    for cid in manager.rooms[meeting_id]:
+                        if cid != client_id:
+                            manager.rooms[meeting_id][cid]["audio"] = False
                 await manager.broadcast_to_others(meeting_id, client_id, {
                     "type": "mute-all",
                     "sender": client_id
