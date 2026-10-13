@@ -252,7 +252,11 @@ class MeetingService:
             meeting.status = "active"
             db.add(meeting)
 
-        is_host = is_host_name_match(request.display_name, meeting.host_display_name)
+        # Determine host status: guests explicitly sending is_host=False never get host privileges
+        if request.is_host is not None:
+            is_host = bool(request.is_host and is_host_name_match(request.display_name, meeting.host_display_name))
+        else:
+            is_host = is_host_name_match(request.display_name, meeting.host_display_name)
 
         # Check if participant with this client_id is already in meeting
         existing = db.query(Participant).filter(

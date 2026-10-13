@@ -42,6 +42,7 @@ class MeetingJoinRequest(BaseModel):
     display_name: str = Field(..., min_length=1, max_length=128, description="Participant display name")
     passcode: Optional[str] = Field(None, description="Meeting passcode if required")
     client_id: Optional[str] = Field(None, description="Unique client ID or device ID")
+    is_host: Optional[bool] = Field(None, description="Whether the joiner is the meeting host")
 
 
 class MeetingResponse(MeetingBase):
