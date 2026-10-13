@@ -125,7 +125,28 @@ async def websocket_signaling_endpoint(
             msg_type = data.get("type")
             target = data.get("target")
 
-            if msg_type in ["offer", "answer", "ice-candidate"]:
+            if msg_type == "ping":
+                # WebSocket heartbeat to keep cloud proxies (e.g. Render) from dropping idle connection
+                await websocket.send_text(json.dumps({"type": "pong"}))
+            elif msg_type in ["sync-room", "get-peers"]:
+                # Force resend current room peers to this client
+                current_peers = [
+                    {
+                        "clientId": cid,
+                        "displayName": pdata["display_name"],
+                        "isMuted": not pdata.get("audio", True),
+                        "isVideoOff": not pdata.get("video", True),
+                        "isScreenSharing": bool(pdata.get("screen", False)),
+                    }
+                    for cid, pdata in manager.rooms.get(meeting_id, {}).items()
+                    if cid != client_id
+                ]
+                await websocket.send_text(json.dumps({
+                    "type": "room-state",
+                    "clientId": client_id,
+                    "peers": current_peers
+                }))
+            elif msg_type in ["offer", "answer", "ice-candidate"]:
                 # Point-to-point WebRTC signaling message
                 data["sender"] = client_id
                 if target:
